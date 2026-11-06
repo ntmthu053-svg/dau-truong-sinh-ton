@@ -88,21 +88,15 @@ function nextVoice(){
   u.lang='vi-VN';
   u.rate=1.05;
 
-  const runSpeak = () => {
-    const voices = window.speechSynthesis.getVoices();
-    const v = voices.find(voice => voice.lang === 'vi-VN' || voice.lang.startsWith('vi') || voice.name.includes('Vietnamese'));
-    if(v) u.voice = v;
-    window.speechSynthesis.speak(u);
-  };
-
-  const voicesCheck = window.speechSynthesis.getVoices();
-  if (voicesCheck.length > 0) {
-    runSpeak();
-  } else {
-    window.speechSynthesis.onvoiceschanged = runSpeak;
+  const voices = window.speechSynthesis.getVoices();
+  // Tìm ưu tiên giọng tiếng Việt chính xác nhất
+  const v = voices.find(voice => voice.lang === 'vi-VN' || voice.lang === 'vi' || voice.name.toLowerCase().includes('vietnamese') || voice.name.toLowerCase().includes('vietnam'));
+  if(v) {
+    u.voice = v;
   }
 
   u.onend=u.onerror=()=>{speaking=false;curReal=false;if(!Q.length)duck(false);nextVoice()};
+  window.speechSynthesis.speak(u);
 }
 
 function say(s){LOG.push({s,t:5});if(LOG.length>5)LOG.shift()}
