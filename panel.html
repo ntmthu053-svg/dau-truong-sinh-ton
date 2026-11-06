@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Đấu Trường Sinh Tồn - Bảng điều khiển</title>
+<style>
+:root{--bg:#0b0b16;--fg:#f2f2ff;--card:#171730;--bd:#33336a;--ac:#ff2d75;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b0b16;--fg:#f2f2ff;--card:#171730;--bd:#33336a}}
+:root[data-theme="dark"]{--bg:#0b0b16;--fg:#f2f2ff;--card:#171730;--bd:#33336a}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;padding:10px;max-width:640px;margin:0 auto}
+h1{font-size:17px;margin:4px 2px 8px}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+button,input,select{font:inherit;font-size:14px;color:var(--fg);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:9px 10px}
+button{cursor:pointer;flex:1;min-width:90px}button:active{background:var(--ac)}
+input{flex:2;min-width:110px}select{flex:1;min-width:140px}
+.g{display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.25;padding:8px 4px}
+.g span{font-size:22px}.g b{font-size:13px}.g small{font-size:11px;opacity:.75;text-align:center}
+.st{font-size:12px;padding:8px 10px;border-radius:10px;border:1px solid var(--bd);background:var(--card)}
+.ok{color:#7dffa0}.bad{color:#ffb36b}
+.hint{font-size:11.5px;opacity:.7;margin:8px 2px;line-height:1.5}
+</style>
+</head>
+<body>
+<h1>🎛️ Đấu Trường Sinh Tồn - Bảng điều khiển</h1>
+<div class="st" id="s1">Game: <span id="gs" class="bad">chưa thấy cửa sổ game</span> · TikFinity: <span id="ts">-</span> · Vòng <span id="rn">-</span></div>
+<div class="row"><input id="un" placeholder="Tên người xem" maxlength="12" value="Bạn"><input id="cm" placeholder="Bình luận (gõ: Đấu)" maxlength="40"><button id="send">Gửi</button></div>
+<div class="row"><button id="join">Vào sân (gửi “Đấu”)</button><button id="test">+5 khán giả thử</button></div>
+<div class="row"><select id="tg"><option value="">🎯 Mục tiêu: ngẫu nhiên</option></select></div>
+<div class="row">
+<button class="g" data-g="rose"><span>🌹</span><b>Hoa hồng</b><small>Hồi máu, lớn nhanh (+16)</small></button>
+<button class="g" data-g="saw"><span>🪚</span><b>Cưa máy</b><small>8 giây: lao vào cưa máu đối thủ to hơn</small></button>
+<button class="g" data-g="rocket"><span>🚀</span><b>Tên lửa</b><small>Tăng tốc 2,5 giây, lao ăn đối thủ nhỏ hơn</small></button>
+<button class="g" data-g="bomb"><span>💣</span><b>Bom</b><small>Nổ hất văng, trừ máu người xung quanh</small></button>
+<button class="g" data-g="magnet"><span>🧲</span><b>Nam châm</b><small>6 giây: hút hoa quanh mình</small></button>
+</div>
+<div class="row"><button id="vo">🔊 Giọng đọc</button><button id="mu">🎵 Nhạc</button></div>
+<div class="hint">Bảng này chỉ điều khiển cửa sổ game <b>index.html</b> đang mở trong <b>cùng trình duyệt</b> (cùng địa chỉ https). Quà/bình luận thật từ TikTok đến qua TikFinity, không cần bảng này.</div>
+<script>
+const $=id=>document.getElementById(id);let bc=null,st={voice:true,music:true},last=0,lastList='';
+try{bc=new BroadcastChannel('dautruong')}catch(e){$('gs').textContent='trình duyệt không hỗ trợ BroadcastChannel'}
+const send=m=>{try{bc&&bc.postMessage(m)}catch(e){}};
+const user=()=>($('un').value.trim()||'Bạn').slice(0,12);
+function paint(){$('vo').textContent=(st.voice?'🔊 Tắt':'🔇 Bật')+' giọng đọc';$('mu').textContent=(st.music?'🎵 Tắt':'🎵 Bật')+' nhạc'}
+if(bc)bc.onmessage=e=>{const d=e.data||{};if(d.t!=='state')return;last=Date.now();st=d;paint();
+  $('rn').textContent=d.round;const t=$('ts');t.textContent=d.tf;t.className=d.tf==='đã kết nối'?'ok':'bad';
+  const k=(d.list||[]).join('|');if(k!==lastList){lastList=k;const cur=$('tg').value;
+    $('tg').innerHTML='<option value="">🎯 Mục tiêu: ngẫu nhiên</option>'+(d.list||[]).map(n=>'<option>'+n.replace(/[<&]/g,'')+'</option>').join('');
+    if((d.list||[]).includes(cur))$('tg').value=cur}};
+setInterval(()=>{const ok=Date.now()-last<5000,g=$('gs');g.textContent=ok?'đã kết nối':'chưa thấy cửa sổ game';g.className=ok?'ok':'bad'},800);
+send({t:'hello'});paint();
+function sendC(){send({t:'comment',name:user(),text:$('cm').value});$('cm').value=''}
+$('send').onclick=sendC;$('cm').addEventListener('keydown',e=>{if(e.key==='Enter')sendC()});
+$('join').onclick=()=>send({t:'comment',name:user(),text:'Đấu'});
+$('test').onclick=()=>['Thử1','Thử2','Thử3','Thử4','Thử5'].forEach(n=>send({t:'comment',name:n+Math.floor(Math.random()*90+10),text:'Đấu'}));
+document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>send({t:'gift',key:b.dataset.g,name:user(),target:$('tg').value}));
+$('vo').onclick=()=>send({t:'voice',on:!st.voice});$('mu').onclick=()=>send({t:'music',on:!st.music});
+</script>
+</body>
+</html>
