@@ -33,7 +33,7 @@ const SK={rose:['🌹','Hồi máu','hoa hồng'],saw:['🪚','Cưa máy','cưa 
 const KINDS=['cat','penguin','dino','bear'],GK=Object.keys(SK);
 const STARS=Array.from({length:80},()=>({x:Math.random()*W,y:Math.random()*H,s:.6+Math.random()*1.4,p:Math.random()*6}));
 let RK=[],round=0,overT=0,bn=null,spoke2=false;const OVER_MS=8000;
-let P=[],F=[],FX=[],LOG=[],SPK=[],REALS=[],NEXT=[],lastFull=0,t=0,over=null,sel=null,T=0,gt=4,vo=false,Q=[],speaking=false,curReal=false;
+let P=[],F=[],FX=[],LOG=[],SPK=[],REALS=[],NEXT=[],lastFull=0,t=0,over=null,sel=null,T=0,vo=false,Q=[],speaking=false,curReal=false;
 const rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)],rad=p=>Math.sqrt(p.m)*2.6;
 const pt=()=>[rnd(X0+20,X1-20),rnd(Y0+20,Y1-20)];
 
@@ -140,8 +140,10 @@ function gift(type,from,real,tg){
   speak(from+' tặng '+vn+(vn.toLowerCase()===sk.toLowerCase()?'':', '+sk.toLowerCase()),real);
 }
 function step(dt){
-  t+=dt;gt-=dt;
-  if(gt<=0){gt=rnd(5,9);gift(pick(GK),pick(VIEW),false)}
+  t+=dt;
+  // ĐÃ TẮT TÍNH NĂNG TỰ ĐỘNG BUFF QUÀ CHO NGƯỜI CHƠI. 
+  // Chỉ còn bot/người chơi tự ăn hạt (F) hoặc do chính bạn/người xem thật tặng quà.
+  
   const al=P.filter(p=>p.alive);
   for(const p of al){
     p.sh=Math.max(0,p.sh-dt);p.saw=Math.max(0,p.saw-dt);p.cd=Math.max(0,p.cd-dt);p.dash=Math.max(0,p.dash-dt);p.mg=Math.max(0,p.mg-dt);
@@ -185,7 +187,7 @@ function step(dt){
   for(const l of LOG)l.t-=dt;LOG=LOG.filter(l=>l.t>0);
   const left=P.filter(p=>p.alive);
   if((left.length<=1||t>=ROUND)&&!over){
-    const w=left.sort((a,b)=>b.m-a.m)[0];over=w?w.name:'Không ai';
+    const w=left.sort((a,b)=>b.m-b.m)[0];over=w?w.name:'Không ai';
     overT=0;spoke2=false;speak(w?'Hoan hô! '+over+' chiến thắng':'Hết giờ, không ai thắng',true);sfx('win');sfx('clap');setTimeout(reset,OVER_MS)}
 }
 /* ---- vẽ ---- */
