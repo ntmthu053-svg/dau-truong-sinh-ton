@@ -26,7 +26,10 @@ body{padding:0;background:#000;height:100dvh;justify-content:center;overflow:hid
 <canvas id="c" width="540" height="960"></canvas>
 <script>
 const $=id=>document.getElementById(id),cv=$('c'),ctx=cv.getContext('2d');
-const W=540,H=960,X0=14,X1=W-14,Y0=160,Y1=H-240;
+
+/* ĐÃ THU GỌN KHUNG XANH Ở ĐÂY (X0, X1, Y0, Y1) ĐỂ TRÁNH TRÀN VIỀN */
+const W=540,H=960,X0=50,X1=W-50,Y0=200,Y1=H-220;
+
 const NAMES=['Minh','Lan','Hùng','Mai','Tuấn','Hà','Bống','Kiên','Linh','Nam','Thảo','Đạt','Vy','Sơn','Quân','Nga','Phúc','Trang'];
 const VIEW=['Ngọc','Khoa','Yến','Bảo','Thu','Long','Hạnh','Dũng'];
 const SK={rose:['🌹','Hồi máu','hoa hồng'],saw:['🪚','Cưa máy','cưa máy'],rocket:['🚀','Tăng tốc','tên lửa'],bomb:['💣','Bom','bom'],magnet:['🧲','Nam châm','nam châm']};
@@ -73,7 +76,7 @@ function sfx(k){const free=k==='win'||k==='clap'||k==='boom';if(!AC||(!music&&!f
   if(k==='boom'){tone(130,t,.4,'sine',.4,sg,40);noise(t,.3,.25,'lowpass',2200,200)}
   if(k==='win')[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,t+i*.13,.4,'triangle',.32))}
 
-/* ---- GIỌNG ĐỌC ĐÃ FIX CHUẨN TIẾNG VIỆT (Hỗ trợ Netlify HTTPS) ---- */
+/* ---- GIỌNG ĐỌC ĐÃ FIX CHUẨN TIẾNG VIỆT ---- */
 function speak(s,real){
   if(!vo||!window.speechSynthesis)return;
   if(!real&&(Q.length>1||curReal))return;
@@ -89,7 +92,6 @@ function nextVoice(){
   u.rate=1.05;
 
   const voices = window.speechSynthesis.getVoices();
-  // Tìm ưu tiên giọng tiếng Việt chính xác nhất
   const v = voices.find(voice => voice.lang === 'vi-VN' || voice.lang === 'vi' || voice.name.toLowerCase().includes('vietnamese') || voice.name.toLowerCase().includes('vietnam'));
   if(v) {
     u.voice = v;
@@ -271,7 +273,7 @@ function draw(){
   for(let i=SPK.length-1;i>=0;i--)if(SPK[i].l<=0)SPK.splice(i,1);
   ctx.globalCompositeOperation='source-over';
   for(const f of FX){ctx.beginPath();ctx.arc(f.x,f.y,f.r,0,6.283);ctx.strokeStyle=`rgba(255,200,80,${f.a})`;ctx.lineWidth=4;ctx.stroke()}
-  // HUD
+  /* HUD */
   ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='rgba(0,0,0,.6)';
   ctx.font='bold 24px system-ui';ctx.fillStyle=`hsl(${(T*80)%360},100%,72%)`;ctx.strokeText('ĐẤU TRƯỜNG SINH TỒN',W/2,38);ctx.fillText('ĐẤU TRƯỜNG SINH TỒN',W/2,38);
   ctx.font='bold 15px system-ui';ctx.fillStyle='#fff';ctx.lineWidth=3;
@@ -312,16 +314,15 @@ cv.addEventListener('pointerdown',e=>{
   const b=cv.getBoundingClientRect(),x=(e.clientX-b.left)*W/b.width,y=(e.clientY-b.top)*H/b.height;
   let best=null,bd=1e9;for(const p of P)if(p.alive){const d=Math.hypot(p.x-x,p.y-y);if(d<rad(p)+14&&d<bd){bd=d;best=p}}sel=best});
 /* cầu nối TikTok: tab khác cùng trang gửi sự kiện qua BroadcastChannel hoặc gọi window.TikGame */
-/* Ánh xạ tên quà TikTok -> skill. Sửa ở đây nếu muốn đổi quà nào ra skill nào (quà khác = skill ngẫu nhiên) */
 const GIFTMAP=[[/nước hoa|perfume|cưa/,'saw'],[/hoa hồng|rose/,'rose'],[/bắn tim|finger heart|heart|tên lửa|rocket/,'rocket'],[/heo|pig|bom|bomb/,'bomb'],[/bánh vòng|donut|doughnut|nam châm|magnet/,'magnet']];
 const gmap=s=>{s=String(s).normalize('NFC').toLowerCase();for(const[r,k]of GIFTMAP)if(r.test(s))return k;return pick(GK)};
 window.TikGame={comment,gift:(n,k)=>gift(gmap(k||''),n,true)};
-/* nhận lệnh từ bảng điều khiển (panel.html) - cùng trình duyệt, cùng địa chỉ web */
+/* nhận lệnh từ bảng điều khiển (panel.html) */
 if(BC)BC.onmessage=e=>{const d=e.data||{};
   if(d.t==='comment')comment(String(d.name||'Khán giả').slice(0,14),d.text);
   else if(d.t==='gift'){const k=SK[d.key]?d.key:gmap(d.type||'');const tg=d.target?P.find(p=>p.alive&&p.name===d.target):null;gift(k,String(d.name||'Khán giả').slice(0,14),true,tg||sel)}
   else if(d.t==='voice')setVoice(!!d.on);else if(d.t==='music')setMusic(!!d.on);else if(d.t==='hello')pushState()};
-/* TikFinity Desktop: nhận bình luận + quà thật qua ws://127.0.0.1:21213 (đổi cổng: ?tf=127.0.0.1:CỔNG, tắt: ?tf=off) */
+/* TikFinity Desktop */
 function tfConnect(){
   const host=QS.get('tf')||'127.0.0.1:21213';let ws;
   try{ws=new WebSocket('ws://'+host+'\/')}catch(e){tf='lỗi kết nối';setTimeout(tfConnect,4000);return}
